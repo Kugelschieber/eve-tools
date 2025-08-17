@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .text-input-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-input-container label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+            background: white;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0;
+            border: 2px solid #667eea;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+        }
+
+        .result-column {
+            background: white;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .result-column:last-child {
+            border-right: none;
+        }
+
+        .result-column h3 {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin: 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1rem;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .result-column.only-text1 h3 {
+            background: #ffe6e6;
+            color: #d63384;
+        }
+
+        .result-column.only-text2 h3 {
+            background: #e6f7ff;
+            color: #0d6efd;
+        }
+
+        .result-column.common h3 {
+            background: #e6f4ea;
+            color: #198754;
+        }
+
+        .result-content {
+            padding: 15px;
+            min-height: 100px;
+        }
+
+        .line-item {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-word;
+            transition: all 0.2s ease;
+        }
+
+        .line-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .only-text1 .line-item {
+            background: #ffe6e6;
+            border-left: 4px solid #d63384;
+        }
+
+        .only-text2 .line-item {
+            background: #e6f7ff;
+            border-left: 4px solid #0d6efd;
+        }
+
+        .common .line-item {
+            background: #e6f4ea;
+            border-left: 4px solid #198754;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 30px;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-column {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .result-column:last-child {
+                border-bottom: none;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Text Comparison Tool</h1>
+        
+        <div class="input-section">
+            <div class="text-input-container">
+                <label for="text1">Text 1:</label>
+                <textarea id="text1" placeholder="Enter your first text here...
+Each line will be compared separately"></textarea>
+            </div>
+            <div class="text-input-container">
+                <label for="text2">Text 2:</label>
+                <textarea id="text2" placeholder="Enter your second text here...
+Each line will be compared separately"></textarea>
+            </div>
+        </div>
+
+        <div class="options">
+            <div class="checkbox-container">
+                <input type="checkbox" id="caseSensitive">
+                <label for="caseSensitive">Case sensitive comparison</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="ignoreWhitespace">
+                <label for="ignoreWhitespace">Ignore leading/trailing whitespace</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="ignoreEmpty" checked>
+                <label for="ignoreEmpty">Ignore empty lines</label>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="compareTexts()">🔍 Compare Texts</button>
+            <button class="btn secondary" onclick="clearAll()">🗑️ Clear All</button>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="stats" id="stats"></div>
+            
+            <div class="results-header">
+                📋 Comparison Results (Sorted Alphabetically)
+            </div>
+            <div class="results-grid">
+                <div class="result-column only-text1">
+                    <h3>📝 Only in Text 1</h3>
+                    <div class="result-content" id="onlyText1"></div>
+                </div>
+                <div class="result-column only-text2">
+                    <h3>📝 Only in Text 2</h3>
+                    <div class="result-content" id="onlyText2"></div>
+                </div>
+                <div class="result-column common">
+                    <h3>✅ Common Lines</h3>
+                    <div class="result-content" id="commonLines"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function compareTexts() {
+            const text1 = document.getElementById('text1').value;
+            const text2 = document.getElementById('text2').value;
+            
+            if (!text1.trim() && !text2.trim()) {
+                alert('Please enter text in at least one of the text areas.');
+                return;
+            }
+
+            // Get options
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const ignoreWhitespace = document.getElementById('ignoreWhitespace').checked;
+            const ignoreEmpty = document.getElementById('ignoreEmpty').checked;
+
+            // Process lines
+            let lines1 = text1.split('\n');
+            let lines2 = text2.split('\n');
+
+            // Apply filters
+            if (ignoreEmpty) {
+                lines1 = lines1.filter(line => line.trim() !== '');
+                lines2 = lines2.filter(line => line.trim() !== '');
+            }
+
+            if (ignoreWhitespace) {
+                lines1 = lines1.map(line => line.trim());
+                lines2 = lines2.map(line => line.trim());
+            }
+
+            // Create sets for comparison
+            const set1 = new Set();
+            const set2 = new Set();
+
+            lines1.forEach(line => {
+                const processedLine = caseSensitive ? line : line.toLowerCase();
+                set1.add(processedLine);
+            });
+
+            lines2.forEach(line => {
+                const processedLine = caseSensitive ? line : line.toLowerCase();
+                set2.add(processedLine);
+            });
+
+            // Find differences and common lines
+            const onlyInText1 = [];
+            const onlyInText2 = [];
+            const commonLines = [];
+
+            // Lines only in text1
+            lines1.forEach(line => {
+                const processedLine = caseSensitive ? line : line.toLowerCase();
+                if (!set2.has(processedLine)) {
+                    if (!onlyInText1.includes(line)) {
+                        onlyInText1.push(line);
+                    }
+                }
+            });
+
+            // Lines only in text2
+            lines2.forEach(line => {
+                const processedLine = caseSensitive ? line : line.toLowerCase();
+                if (!set1.has(processedLine)) {
+                    if (!onlyInText2.includes(line)) {
+                        onlyInText2.push(line);
+                    }
+                }
+            });
+
+            // Common lines
+            lines1.forEach(line => {
+                const processedLine = caseSensitive ? line : line.toLowerCase();
+                if (set2.has(processedLine)) {
+                    if (!commonLines.includes(line)) {
+                        commonLines.push(line);
+                    }
+                }
+            });
+
+            // Sort alphabetically
+            const sortFunction = caseSensitive ? 
+                (a, b) => a.localeCompare(b) : 
+                (a, b) => a.toLowerCase().localeCompare(b.toLowerCase());
+
+            onlyInText1.sort(sortFunction);
+            onlyInText2.sort(sortFunction);
+            commonLines.sort(sortFunction);
+
+            // Display results
+            displayResults(onlyInText1, onlyInText2, commonLines);
+            
+            // Show statistics
+            displayStats({
+                text1Lines: lines1.length,
+                text2Lines: lines2.length,
+                onlyText1: onlyInText1.length,
+                onlyText2: onlyInText2.length,
+                common: commonLines.length
+            });
+
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+
+        function displayResults(onlyInText1, onlyInText2, commonLines) {
+            // Display lines only in text1
+            const onlyText1Element = document.getElementById('onlyText1');
+            if (onlyInText1.length === 0) {
+                onlyText1Element.innerHTML = '<div class="empty-state">No unique lines found</div>';
+            } else {
+                onlyText1Element.innerHTML = onlyInText1
+                    .map(line => `<div class="line-item">${escapeHtml(line || '(empty line)')}</div>`)
+                    .join('');
+            }
+
+            // Display lines only in text2
+            const onlyText2Element = document.getElementById('onlyText2');
+            if (onlyInText2.length === 0) {
+                onlyText2Element.innerHTML = '<div class="empty-state">No unique lines found</div>';
+            } else {
+                onlyText2Element.innerHTML = onlyInText2
+                    .map(line => `<div class="line-item">${escapeHtml(line || '(empty line)')}</div>`)
+                    .join('');
+            }
+
+            // Display common lines
+            const commonLinesElement = document.getElementById('commonLines');
+            if (commonLines.length === 0) {
+                commonLinesElement.innerHTML = '<div class="empty-state">No common lines found</div>';
+            } else {
+                commonLinesElement.innerHTML = commonLines
+                    .map(line => `<div class="line-item">${escapeHtml(line || '(empty line)')}</div>`)
+                    .join('');
+            }
+        }
+
+        function displayStats(stats) {
+            const statsElement = document.getElementById('stats');
+            statsElement.innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-value">${stats.text1Lines}</span>
+                    <div class="stat-label">Lines in Text 1</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${stats.text2Lines}</span>
+                    <div class="stat-label">Lines in Text 2</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${stats.onlyText1}</span>
+                    <div class="stat-label">Unique to Text 1</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${stats.onlyText2}</span>
+                    <div class="stat-label">Unique to Text 2</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">${stats.common}</span>
+                    <div class="stat-label">Common Lines</div>
+                </div>
+            `;
+        }
+
+        function clearAll() {
+            document.getElementById('text1').value = '';
+            document.getElementById('text2').value = '';
+            document.getElementById('resultsSection').style.display = 'none';
+            
+            // Reset checkboxes to default
+            document.getElementById('caseSensitive').checked = false;
+            document.getElementById('ignoreWhitespace').checked = false;
+            document.getElementById('ignoreEmpty').checked = true;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        compareTexts();
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        clearAll();
+                        break;
+                }
+            }
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.max(200, this.scrollHeight) + 'px';
+            });
+        });
+    </script>
+</body>
+</html>
